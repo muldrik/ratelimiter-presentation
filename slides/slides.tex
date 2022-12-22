@@ -4,7 +4,8 @@
 \usepackage[T2A]{fontenc}
 \usepackage{cmap}
 \usepackage{paratype}
-\usepackage{minted} % для примеров кода (требует параметра -shell-escape)
+\usepackage{hyperref}
+\usepackage{qrcode}
 
 \usetheme{metropolis}
 \usefonttheme[]{professionalfonts}  % запрещаем beamer'у перезаписывать мат. шрифты
@@ -41,15 +42,14 @@
 
 \begin{frame}[plain]
   \begin{center}
-    \textbf{Имя и фамилия автора}
+    \textbf{Никита Митцев}
 
-    {\Large\textbf{Тема работы: довольно длинное название строки на две минимум}}
+    {\Large\textbf{Разработка ограничителя частоты запросов для Яндекс.Трекера}}
 
-    Выпускная квалификационная работа
 
-    {\small Научный руководитель: А.\,А.\,Выбегалло}
+    {\small Руководитель проекта: Э. Э. Александров}
 
-    ДАТА ЗАЩИТЫ
+    23.12.2002
   \end{center}
 
 
@@ -66,139 +66,138 @@
 \end{frame}
 
 
+\begin{frame}
+\frametitle{Что такое Трекер}
+\begin{center}
+\includegraphics[width=12cm]{images/tracker.png}
+\end{center}
+\end{frame}
 
 \begin{frame}
-\frametitle{Введение в предметную область}
+\frametitle{Зачем Трекеру ограничивать запросы}
 
 \begin{itemize}
-\item О чём здесь вообще речь? Для чего вообще этим всем стоит заниматься?
-\item В чём актуальность работы?
-\item Кто ещё этим занимается, с кем мы будем сравниваться?
-\item Этот слайд необходим для того, чтобы постановка задачи была понятнее.
-\item Вряд ли стоит делать больше двух таких слайдов, иначе вы не успеете рассказать о своей работе.
-\item На введение в предметную область должно уйти не более 15\% времени вашего доклада.
+\item Обращение к некоторым подсистемам вычислительно намного дороже, чем к остальным. Их перегрузка может нарушить работу сервера.
+\item Пользователи иногда пишут ужасные скрипты, обращающиеся к ним по 500 раз.
+\item Этой же уязвимостью могут воспользоваться злоумышленники
 \end{itemize}
-
 
 \end{frame}
 
 \begin{frame}
-\frametitle{Постановка задачи}
+\frametitle{Задачи}
 \begin{enumerate}
-\item Разработать алгоритм решения задачи путешествующего сейлсмена\footnote{Крайне рекомендуется избегать англицизмов --- старайтесь использовать принятые в~русском языке термины.}, работающий за полиномиальное время.
-\item Построить программную implementation\footnote{Так тоже не надо.}, протестировать её~производительность и сравнить с конкурентами.
-\item Оформить результаты работы в виде доклада на~STOC\footnote{Злоупотреблять аббревиатурами также не стоит, используйте только действительно общепринятые и всем известные сокращения.}.
+\item Установить проблемы и требования.
+\item Исследовать существующие решения.
+\item Согласовать и реализовать подход.
+\item Протестировать корректность и производительность.
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{Задача 1: формула с пояснениями}
-\small
-    Фильтр минимизирует среднеквадратическое отклонение цвета пикселя.
-    
-    \begin{equation*}\label{eq:wiener_nsr}
-    \hat{Y}(i, j) = \left[ \frac{\hat{H}^*(i, j)}{\left|\hat{H}(i, j)\right|^2 + \frac{S_n(i, j)}{S_s(i, j)}} \right] \times \hat{F}(i, j),
-    \end{equation*}
+\begin{frame}
+\frametitle{Последовательность обработки запроса}
+\begin{center}
+\includegraphics[width=14cm]{images/interceptor.png}
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Распределенная структура бэкенда}
+\begin{center}
+\includegraphics[width=9cm]{images/dist.png}
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Требования:}
 \begin{itemize}
-    \item $Y$ -- восстановленное изображение,  $F$ -- наблюдаемое изображение,
-    \item $H$ -- функция рассеивания, $H^*$ --комплексное сопряжение $H$,
-    \item $S_n$ -- энергетический спектр шума -- $\left| \hat{N} \right|^2$,
-    \item $S_s$ -- энергетический спектр исходного изображения -- $\left| \hat{F} \right|^2$,
-    \item $\times$ -- умножение комплексных чисел.
+\item Быстро принимать решение по запросу, отстуствие сетевых блокировок
+\item Целостность данных при потере 1 сервера (особый случай обновления)
+\item Возможность настройки лимитов и параметров без перезапуска
 \end{itemize}
 \end{frame}
 
 
-\begin{frame}[fragile]
-\frametitle{Задача 2: код на языке программирования\footnote{Увлекаться кодом на слайдах не стоит, зато структурные и иные диаграммы обычно смотрятся хорошо.}}
-\begin{minted}{kotlin}
-fun main() {
-    val name = "stranger"
-    println("Hi, $name!")
-    print("Current count:")
-    for (i in 0..10) {
-        print(" $i")
-    }
+\begin{frame}
+\frametitle{Точность за счёт распределенных хранилищ}
+\begin{itemize}
+\item Предоставляют доступ к общему состоянию (например реализуя распределенный HashMap)
+\item Множество решений, заявляющих высокую производительность: Redis, Ignite, Hazelcast, Infinispan...
+\item Для проекта выбран Apache Ignite, оставлена возможность легко перейти на другое решение.
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Алгоритм и оптимизация скорости.}
+\begin{center}
+\includegraphics[width=12cm]{images/algoRu.png}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Тесты. CPU}
+\begin{center}
+\includegraphics[width=12cm]{images/cpuOff.png}
+
+
+\includegraphics[width=12cm]{images/cpuOn.png}
+\end{center}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{Тесты. Сеть}
+\begin{center}
+\includegraphics[width=12cm]{images/netOff.png}
+
+\includegraphics[width=12cm]{images/netOn.png}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Стресс тесты корректности}
+\begin{center}
+\includegraphics[width=12cm]{images/stress.png}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{Основные трудности}
+\begin{itemize}
+\item Распределенное развертывание не быстрое, прототипирование занимало много времени.
+\item В выбранной библиотеке для лимитирование не было важной для проекта функциональности.
+\item Не всегда доступны мощности для проведения нагрузочных тестов.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Результаты}
+
+\begin{enumerate}
+  \item Разработан и протестирован готовый к использованию в Трекере инструмент.
+  \item Предоставлен отчёт для команды, содержащий обоснование принятых решений, рекомендации по настройке и работе, а также результаты тестов и их интерпретацию.
+  \item Измененная копия отчёта в свободном доступе.
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ссылки}
+  \begin{center}
+    Автор: Никита Митцев, muldrik@yandex.ru \\
+  \end{center}
+  \qrcode[height=45mm]{https://docs.google.com/document/d/1PA6zSGjfig8ZfJeAFRtxucn92N-YWwWgQRYRTN1rkM8/edit?usp=sharing} \hfill
+  \qrcode[height=45mm]{https://github.com/muldrik/ratelimiter-presentation/blob/main/slides/slides.pdf}\\
+{\small
+  \textit{Итоговый отчёт в Google Docs}\hfill
+  \textit{Итоговый отчёт на github}
+  % \textit{Итоговый документ (позже переедет в репозиторий выше):} \href{https://docs.google.com/document/d/1XxfN0Q7YrjKV4CA-kIeU_xgnu1CKIoWbNGlGvHUgF9E/edit?usp=sharing}{https://docs.google.com/document/d/1XxfN0Q7YrjKV4CA-kIeU_xgnu1CKIoWbNGlGvHUgF9E/edit?usp=sharing}
+%   \textit{Репозиторий с кодом для сбора статистики:} \href{https://github.com/muldrik/projector-server}{https://github.com/muldrik/projector-server}\\
+%   \textit{Репозиторий с кодом для генерации отчётов и графиков:} \href{https://github.com/muldrik/projector-report-generator}{https://github.com/muldrik/projector-report-generator}
 }
-\end{minted}
-\end{frame}
-
-\begin{frame}{Задача 2: результаты измерений в таблице}
-\centering
-\begin{tabular}{lccc}
-    Имя & Работа 1 & Работа 2 & Итог \\
-\hline\hline
-    Алиса & 8.0 & 9.0 & 8.5 \\
-    Боб & 9.0 & 9.8 & 9.4 \\
-    Чак & 9.1 & 9.3 & 9.2 \\
-\end{tabular}
-
-\begin{block}{Пояснения к таблице}
-  \begin{itemize}
-  \item Таблицы могут требовать пояснений.
-  \item Что это за величины? Откуда они взялись?
-  \item Какие выводы можно сделать?
-  \end{itemize}
-\end{block}
-
-\end{frame}
-
-
-\begin{frame}
-\frametitle{Задача 2: результаты сравнения с конкурентами\footnote{Понятна ли ваша диаграмма? Не забыли ли вы легенду?}\footnote{Контрастно ли изображение? Помните, на проекторе всё может выглядеть хуже.}}
-\begin{center}
-\includegraphics[width=11cm]{images/graph.png}
-\end{center}
-\end{frame}
-
-\begin{frame}
-\frametitle{Задача 3: основные трудности}
-\begin{itemize}
-\item Мы всё классно сделали, но рецензенты STOC сформулировали ряд претензий к~работе, обозвали нас идиотами и отказались пускать на конференцию.
-\item Все замечания были исправлены, попробуем FOCS\footnote{Не забывайте про нежелательность англицизмов и аббревиатур.}!
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Дополнительный слайд по работе в целом\footnote{Кстати, слайды с длинными перечислениями выглядят плохо. Старайтесь их избегать.}}
-\begin{itemize}
-\item Освоенные и применённые технологии
-\item Информация о внедрении
-\item Полученные в ходе выполнения работы навыки
-\item Вынесенные уроки
-\item Реальные планы на будущее (не надо фантазировать!)
-\item Ссылки на цитированную литературу --- их можно вынести в конец слайдов, но во время доклада не показывать.
-\end{itemize}
-
-\end{frame}
-
-
-\begin{frame}
-\frametitle{Результаты работы}
-
-\begin{enumerate}
-\item Разработан полиномиальный алгоритм решения задачи коммивояжёра.
-\item Программная реализация демонстрирует высочайшую производительность и превосходит все известные аналоги.
-\item Результаты подготовлены для представления на~FOCS.
-\end{enumerate}
-
-\vspace{5mm}\hrule\vspace{5mm}
-
-\begin{center}
-Имя, фамилия и контакты автора,\\ссылка на материалы работы, QR-код.
-\end{center}
-
-\end{frame}
-
-\begin{frame}[noframenumbering,plain]
-\frametitle{}
-\begin{center}
-  \Huge Спасибо за внимание!
-
-  Ваши вопросы?
-
-  {\color{red}Этот слайд не нужен! Удалите его\footnote{Сноски на слайдах тоже удалите: не нужно усложнять их структуру и содержимое. Не~забывайте, что многое можно просто сказать словами.}!}
-\end{center}
 \end{frame}
 
 
